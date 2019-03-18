@@ -1,0 +1,41 @@
+{
+    "name": "@itmh/job-frontend-developer-test",
+    "description": "Тестовое задание для соискателей на должность frontend разработчика",
+    "version": "0.0.0",
+    "author": "Pasha Semenov <sempasha@gmail.com>",
+    "repository": "https://gitlab.com/itmh/job-frontend-developer-test.git",
+    "homepage": "https://gitlab.com/itmh/job-frontend-developer-test",
+    "keywords": [
+        "itmh",
+        "fronend разработчик",
+        "тестовое задание",
+        "тест"
+    ],
+    "dependencies": {
+        "commander": "2.x",
+        "cors": "2.x",
+        "express": "4.x",
+        "lodash.padstart": "4.x",
+        "morgan": "1.x"
+    },
+    "devDependencies": {
+        "eslint": "2.x",
+        "mocha": "6.x",
+        "supertest": "3.x"
+    },
+    "main": "./index.js",
+    "bin": {
+        "ott-server": "./index.js"
+    },
+    "scripts": {
+        "test": "mocha -R dot ./test.js",
+        "start": "node ./index.js"
+    },
+    "files": [
+        "README.md",
+        "index.js"
+    ],
+    "readme": "",
+    "readmeFilename": "README.md",
+    "license": "UNLICENSED"
+}
