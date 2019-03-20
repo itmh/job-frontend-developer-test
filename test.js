@@ -1,55 +1,56 @@
-describe('API', function () {
-    const app = require('./index');
-    const data = [{
-        id: 1,
-        name: 'Первый канал',
-        icon: '/channel-1.png',
-        groups: ['Группа 2', 'Группа 1'],
-        program: [{
-            startTime: '00:00:00',
-            name: 'Ночь на первом',
-            endTime: '06:00:00'
-        }, {
-            startTime: '06:00:00',
-            name: 'Утро на первом',
-            endTime: '12:00:00'
-        }, {
-            startTime: '12:00:00',
-            name: 'День на первом',
-            endTime: '18:00:00'
-        }, {
-            startTime: '18:00:00',
-            name: 'Вечер на первом',
-            endTime: '00:00:00'
-        }]
+const assert = require('assert');
+const fs = require('fs');
+const padstart = require('lodash.padstart');
+const path = require('path');
+const request = require('supertest');
+const app = require('./index');
+const data = [{
+    id: 1,
+    name: 'Первый канал',
+    icon: '/channel-1.png',
+    groups: ['Группа 2', 'Группа 1'],
+    program: [{
+        startTime: '00:00:00',
+        name: 'Ночь на первом',
+        endTime: '06:00:00'
     }, {
-        id: 2,
-        name: 'Второй канал',
-        icon: '/channel-2.png',
-        groups: ['Группа 3', 'Группа 1'],
-        program: [{
-            startTime: '00:00:00',
-            name: 'Ночь на втором',
-            endTime: '06:00:00'
-        }, {
-            startTime: '06:00:00',
-            name: 'Утро на втором',
-            endTime: '12:00:00'
-        }, {
-            startTime: '12:00:00',
-            name: 'День на втором',
-            endTime: '18:00:00'
-        }, {
-            startTime: '18:00:00',
-            name: 'Вечер на втором',
-            endTime: '00:00:00'
-        }]
-    }];
-    const fs = require('fs');
-    const padstart = require('lodash.padstart');
-    const path = require('path');
-    const request = require('supertest');
+        startTime: '06:00:00',
+        name: 'Утро на первом',
+        endTime: '12:00:00'
+    }, {
+        startTime: '12:00:00',
+        name: 'День на первом',
+        endTime: '18:00:00'
+    }, {
+        startTime: '18:00:00',
+        name: 'Вечер на первом',
+        endTime: '00:00:00'
+    }]
+}, {
+    id: 2,
+    name: 'Второй канал',
+    icon: '/channel-2.png',
+    groups: ['Группа 3', 'Группа 1'],
+    program: [{
+        startTime: '00:00:00',
+        name: 'Ночь на втором',
+        endTime: '06:00:00'
+    }, {
+        startTime: '06:00:00',
+        name: 'Утро на втором',
+        endTime: '12:00:00'
+    }, {
+        startTime: '12:00:00',
+        name: 'День на втором',
+        endTime: '18:00:00'
+    }, {
+        startTime: '18:00:00',
+        name: 'Вечер на втором',
+        endTime: '00:00:00'
+    }]
+}];
 
+describe('API', function () {
     before(app.start.bind(app, {
         address: null,
         data: data,
@@ -57,6 +58,41 @@ describe('API', function () {
         port: 3000
     }));
     after(app.stop);
+
+    describe('data set', function () {
+        const data = require('./data');
+
+        it('Для всех телеканалов доступны иконки',
+            function () {
+                data.forEach(channel => {
+                    fs.statSync(path.join(__dirname, channel.icon));
+                });
+            });
+
+        it('Для всех телеканалов доступна телепрограмма, причем на полные сутки от начала и до конца',
+            function () {
+                data.forEach(channel => {
+                    const first = channel.program[0];
+                    const last = channel.program[channel.program.length - 1];
+
+                    assert.notStrictEqual(first, last,
+                        'У канала "' + channel.name + '" мало передач в программе');
+                    assert.strictEqual(first.startTime, '00:00:00',
+                        'У канала "' + channel.name + '" первая передача начинается не в 00:00:00');
+                    assert.strictEqual(last.endTime, '00:00:00',
+                        'У канала "' + channel.name + '" последняя передача заканчивается не в 00:00:00');
+
+                    channel.program.reduce((prev, next) => {
+                        if (prev) {
+                            assert.strictEqual(prev.endTime, next.startTime, 'На канале "' + channel.name + '" не ' +
+                                'совпадает время начала и окончания у передач ' +
+                                '"' + prev.name + '" и "' + next.name + '"');
+                        }
+                        return prev;
+                    }, null);
+                });
+            });
+    });
 
     describe('CORS', function () {
         it('CORS-запросы разрешены отовсюду',
