@@ -105,11 +105,14 @@ describe('API', function () {
     });
 
     describe('GET /group', function () {
-        it('Отдаёт список групп телеканалов',
+        it('Отдаёт список групп телеканалов, включая группу "Все"',
             function () {
                 return request(app.server)
                     .get('/group')
                     .expect(200, [{
+                        id: 'Все',
+                        name: 'Все'
+                    }, {
                         id: 'Группа 1',
                         name: 'Группа 1'
                     }, {
@@ -132,6 +135,23 @@ describe('API', function () {
                         name: 'Первый канал',
                         icon: '/channel-1.png',
                         groups: ['Группа 2', 'Группа 1']
+                    }]);
+            });
+
+        it('Поддерживает группу "Все"',
+            function () {
+                return request(app.server)
+                    .get('/group/' + encodeURIComponent('Все') + '/channel')
+                    .expect(200, [{
+                        id: 1,
+                        name: 'Первый канал',
+                        icon: '/channel-1.png',
+                        groups: ['Группа 2', 'Группа 1']
+                    }, {
+                        id: 2,
+                        name: 'Второй канал',
+                        icon: '/channel-2.png',
+                        groups: ['Группа 3', 'Группа 1']
                     }]);
             });
 

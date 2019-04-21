@@ -25,13 +25,14 @@ exports.getGroups = function getGroups(req, res) {
             return {id: group, name: group};
         });
 
+    result.unshift({id: 'Все', name: 'Все'});
     res.status(200).json(result);
 };
 
 exports.getGroupChannels = function getGroupChannels(req, res) {
     const result = exports.data
         .filter(channel => {
-            return channel.groups.indexOf(req.params.id) > -1;
+            return req.params.id === 'Все' || channel.groups.indexOf(req.params.id) > -1;
         })
         .map(channel => {
             const newChannel = {...channel};
