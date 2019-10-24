@@ -1,9 +1,5 @@
-const assert = require('assert');
-const fs = require('fs');
-const padstart = require('lodash.padstart');
-const path = require('path');
-const request = require('supertest');
 const app = require('./index');
+const assert = require('assert');
 const data = [{
     id: 1,
     name: 'Первый канал',
@@ -49,6 +45,13 @@ const data = [{
         endTime: '00:00:00'
     }]
 }];
+const fork = require('child_process').fork;
+const fs = require('fs');
+const getNetworkInterfaces = require('os').networkInterfaces;
+const http = require('http');
+const padstart = require('lodash.padstart');
+const path = require('path');
+const request = require('supertest');
 
 describe('API', function () {
     before(app.start.bind(app, {
@@ -261,5 +264,107 @@ describe('API', function () {
                 ? (todayDate + 'T' + time)
                 : (tomorrowDate + 'T' + time))).toISOString();
         }
+    }
+});
+
+describe('CLI', function () {
+    const ifaces = getNetworkInterfaces();
+    const ips = Object.keys(ifaces).reduce((ips, ifname) => {
+        ifaces[ifname].forEach(iface => {
+            if (!iface.internal) {
+                ips.push(iface.address);
+            }
+        });
+        return ips;
+    }, []);
+
+    it('По умолчанию web-server занимает порт 3000',
+        function (done) {
+            const greeting = 'listen connections on port 3000\n';
+            const test = testServerConnection.bind(null, 'localhost:3000');
+
+            runProcess([], greeting, [test], done);
+        });
+
+    it('Можно указать порт с помощью параметра `-p, --port [port]`',
+        function (done) {
+            const greeting = 'listen connections on port 5000\n';
+            const test = testServerConnection.bind(null, 'localhost:5000');
+
+            runProcess(['-p', '5000'], greeting, [test], error => {
+                assert.ifError(error);
+                runProcess(['--port', '5000'], greeting, [test], done);
+            });
+        });
+
+    it('По умолчанию web-server занимает порт на всех доступных интерфейсах',
+        function (done) {
+            const greeting = 'listen connections on port 3000\n';
+            const tests = ips.concat(['localhost']).map(ip => {
+                return testServerConnection.bind(null, ip + ':' + '3000');
+            });
+
+            runProcess([], greeting, tests, done);
+        });
+
+    it('Можно указать адрес интерфейса с помощью параметра `-a, --address [ip]`',
+        function (done) {
+            const ip = ips[ips.length - 1];
+            const greeting = 'listen connections on ' + ip + ':3000\n';
+            const test = testServerConnection.bind(null, ip + ':3000');
+
+            runProcess(['-a', ip], greeting, [test], error => {
+                assert.ifError(error);
+                runProcess(['--address', ip], greeting, [test], done);
+            });
+        });
+
+    it('Приложение понимает сигналы `INT` и `TERM` как сигналы к завершению работы',
+        function (done) {
+            testKill('SIGINT', error => {
+                assert.ifError(error);
+                testKill('SIGTERM', done);
+            });
+
+            function testKill(signal, callback) {
+                const proc = fork('./index.js', {silent: true});
+
+                proc.stdout.once('data', () => {
+                    proc.kill(signal);
+                    proc.once('close', callback);
+                });
+            }
+        });
+
+    function runProcess(args, expectedGreating, tests, callback) {
+        const proc = fork('./index.js', args, {silent: true});
+
+        proc.stdout.once('data', data => {
+            assert.strictEqual(data.toString(), expectedGreating);
+            runTest();
+        });
+
+        function runTest(error) {
+            if (error || tests.length === 0) {
+                if (proc.killed) {
+                    callback(error);
+                } else {
+                    proc.kill('SIGKILL');
+                    proc.once('close', callback.bind(null, error));
+                }
+            } else {
+                tests.shift().call(null, runTest);
+            }
+        }
+    }
+
+    function testServerConnection(host, callback) {
+        const req = http.request('http://' + host + '/', res => {
+            res.on('data', () => {});
+            res.once('end', callback);
+        });
+
+        req.once('error', callback);
+        req.end();
     }
 });
