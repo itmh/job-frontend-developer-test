@@ -126,11 +126,27 @@ if (require.main === module) {
         address: cmd.address,
         port: cmd.port,
         log: true
-    }, () => {
-        if (cmd.address) {
-            console.log('listen connections on ' + cmd.address + ':' + cmd.port);
+    }, error => {
+        if (error) {
+            console.error(error);
+            process.exit(1);
         } else {
-            console.log('listen connections on port ' + cmd.port);
+            console.log('listen connections on ' + (cmd.address ? (cmd.address + ':' + cmd.port) : 'port ' + cmd.port));
+            process.on('uncaughtException', onError);
+            process.on('unhandledRejection', onError);
+            process.on('SIGTERM', stop);
+        }
+
+        function onError(error) {
+            console.error(error);
+            stop();
+        }
+
+        function stop() {
+            exports.stop(() => {
+                console.log('bye!');
+                process.exit(0);
+            });
         }
     });
 }
@@ -169,6 +185,6 @@ function getCurrentAndNextProgram(programs) {
     }
 
     function zeroPad(digits, value) {
-        return padstart(value.toString(), digits, '0')
+        return padstart(value.toString(), digits, '0');
     }
 }
