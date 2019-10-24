@@ -44,9 +44,48 @@
 # RESTFul API
 
 Данные для работы приложения (списки групп каналов, каналы и программу телепередач) можно получить через RESTFul API,
-которые предоставляется NodeJS приложением с встроенным веб-сервером. По умолчанию веб-сервер стартует на порту 3000.
- 
-Пример запуска приложения :
+которые предоставляется NodeJS приложением с встроенным веб-сервером.
+
+## Установка
+
+### Docker
+
+Последняя версия приложения доступна на [DockerHub](https://cloud.docker.com/repository/registry-1.docker.io/itmhvpr13/job-frontend-developer-test):
+
+```
+$ docker run -p 3000:3000 itmhvpr13/job-frontend-developer-test:latest
+listen connections on port 3000
+```
+
+Приложение занимает порт 3000 в контейнере, но вы можете назначить любой другой удобный вам порт:
+
+```
+$ docker run -p 80:3000 itmhvpr13/job-frontend-developer-test:latest
+listen connections on port 3000
+```
+
+### CLI
+
+Сперва вам необходимо клонировать репозиторий c [GitLab](https://gitlab.com/itmh/job-frontend-developer-test):
+
+```
+$ git clone https://gitlab.com/itmh/job-frontend-developer-test.git
+```
+
+Или c [GitHub](https://github.com/itmh/job-frontend-developer-test):
+
+```
+$ git clone https://github.com/itmh/job-frontend-developer-test.git
+```
+
+Установить зависимости:
+
+```
+$ cd job-frontend-developer-test
+$ npm install
+```
+
+И запустить приложение (по умолчанию оно запускается на порту 3000):
 
 ```
 $ npm start
@@ -60,7 +99,7 @@ $ npm start -- --address 127.0.0.1 --port 80
 listen connections on 127.0.0.1:80
 ```
 
-Пример доступа к API с помощью curl:
+### Пример запроса
 
 ```
 $ curl -s -i http://localhost:3000/group
@@ -81,13 +120,9 @@ Content-Type: application/json; charset=utf-8
 ]
 ```
 
-ВАЖНО! Перед запуском приложения убедитесь, что были установлены все компоненты, необходимые для работы приложения
+## Интерфейс
 
-```
-$ npm install
-```
-
-## GET /group
+### GET /group
 
 Запрос списка групп телеканалов. Каждая группа представлена объектом, включающим поля:
 
@@ -113,7 +148,7 @@ Content-Type: application/json; charset=utf-8
 ]
 ```
 
-## GET /group/:id/channel
+### GET /group/:id/channel
 
 Запрос списка телеканалов в группе. Каждый телеканал представлен объектом, включающим поля:
 
@@ -202,7 +237,7 @@ Content-Type: application/json; charset=utf-8
 ]
 ```
 
-## GET /channel/:id/program
+### GET /channel/:id/program
 
 Запрос программы телепередач. Ответ - объект из двух полей:
 
