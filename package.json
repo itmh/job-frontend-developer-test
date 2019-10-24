@@ -1,7 +1,7 @@
 {
     "name": "@itmh/job-frontend-developer-test",
     "description": "Тестовое задание для соискателей на должность frontend разработчика",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "author": "Pasha Semenov <sempasha@gmail.com>",
     "repository": "https://gitlab.com/itmh/job-frontend-developer-test.git",
     "homepage": "https://gitlab.com/itmh/job-frontend-developer-test",
